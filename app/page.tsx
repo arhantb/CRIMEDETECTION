@@ -1,269 +1,323 @@
 "use client"
+
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Filter, TrendingUp, Users, Shield, AlertTriangle, Activity, Zap, Database } from "lucide-react"
-import CrimeHeatMap from "@/components/crime-heat-map"
-import AdvancedFilterPanel from "@/components/advanced-filter-panel"
-import SocioEconomicInsights from "@/components/socio-economic-insights"
-import EconomicOverlayControls from "@/components/economic-overlay-controls"
-import SatelliteDataAnalysis from "@/components/satellite-data-analysis"
-import SatelliteOverlayControls from "@/components/satellite-overlay-controls"
-import AIHologramPanel from "@/components/ai-hologram-panel"
-import AIAssistantButton from "@/components/ai-assistant-button"
-import AIInsightPanel from "@/components/ai-insight-panel"
-import { useEffect, useState, useCallback } from "react"
-import { crimeDataService } from "@/lib/services/crime-data-service"
-import type { CrimeStats, CrimeFilters } from "@/lib/types/crime-data"
+import { 
+  Shield, 
+  AlertTriangle, 
+  Camera, 
+  Video, 
+  Users, 
+  CheckCircle, 
+  BarChart3, 
+  Zap,
+  ArrowRight,
+  FileText,
+  MapPin,
+  Clock
+} from "lucide-react"
+import Link from "next/link"
 
-export default function CrimeDashboard() {
-  const [crimeStats, setCrimeStats] = useState<CrimeStats | null>(null)
-  const [filters, setFilters] = useState<CrimeFilters>({
-    crimeTypes: ["theft", "assault"],
-    timeRange: "Last 30 days",
-    regions: ["All India"],
-    intensityRange: [0, 1],
-    dateRange: {
-      start: "",
-      end: "",
-    },
-  })
-  const [loading, setLoading] = useState(true)
-  const [filtersApplied, setFiltersApplied] = useState(false)
-  const [economicOverlays, setEconomicOverlays] = useState<any>(null)
-  const [satelliteOverlays, setSatelliteOverlays] = useState<any>(null)
-
-  // Calculate active filter count
-  const getActiveFilterCount = useCallback(() => {
-    let count = 0
-    if (filters.crimeTypes.length > 0) count++
-    if (filters.regions.length > 0 && !filters.regions.includes("All India")) count++
-    if (filters.timeRange !== "Last 30 days") count++
-    if (filters.intensityRange[0] > 0 || filters.intensityRange[1] < 1) count++
-    if (filters.dateRange.start || filters.dateRange.end) count++
-    return count
-  }, [filters])
-
-  const loadStats = useCallback(async () => {
-    try {
-      const response = await crimeDataService.getCrimeStats()
-      if (response.status === "success") {
-        setCrimeStats(response.data)
-      }
-    } catch (error) {
-      console.error("Failed to load crime stats:", error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadStats()
-  }, [loadStats])
-
-  const handleFiltersChange = (newFilters: CrimeFilters) => {
-    setFilters(newFilters)
-  }
-
-  const handleApplyFilters = () => {
-    setFiltersApplied(true)
-    // Trigger data refresh with new filters
-    loadStats()
-  }
-
-  const handleResetFilters = () => {
-    const defaultFilters: CrimeFilters = {
-      crimeTypes: [],
-      timeRange: "Last 30 days",
-      regions: ["All India"],
-      intensityRange: [0, 1],
-      dateRange: { start: "", end: "" },
-    }
-    setFilters(defaultFilters)
-    setFiltersApplied(false)
-    loadStats()
-  }
-
-  const handleEconomicOverlayChange = (overlays: any) => {
-    setEconomicOverlays(overlays)
-  }
-
-  const handleSatelliteOverlayChange = (overlays: any) => {
-    setSatelliteOverlays(overlays)
-  }
-
-  const mockSparklineData = [
-    { value: 45, timestamp: "Day 1" },
-    { value: 52, timestamp: "Day 2" },
-    { value: 48, timestamp: "Day 3" },
-    { value: 61, timestamp: "Day 4" },
-    { value: 58, timestamp: "Day 5" },
-    { value: 67, timestamp: "Day 6" },
-    { value: 72, timestamp: "Day 7" },
-  ]
-
-  const handleAIQuery = (query: string) => {
-    console.log("[v0] AI Query received:", query)
-    // Handle AI query processing here
-  }
-
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Header */}
-      <header className="border-b border-border bg-card/80 backdrop-blur-xl cyber-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-center mb-6">
               <div className="relative">
-                <Shield className="h-8 w-8 text-primary animate-pulse-glow" />
-                <div className="absolute inset-0 h-8 w-8 text-primary/20 animate-ping" />
+                <Shield className="h-20 w-20 text-white" />
+                <div className="absolute inset-0 h-20 w-20 text-white/20 animate-ping" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Crime Analytics Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Activity className="h-3 w-3 text-primary animate-pulse" />
-                  India - Real-time Crime Intelligence
+            </div>
+            
+            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              AI-Powered Crime Detection System
+            </h1>
+            
+            <p className="text-xl mb-8 text-blue-100 max-w-3xl mx-auto">
+              Advanced crime reporting with intelligent AI analysis and human-in-the-loop verification. 
+              Keep your community safe with cutting-edge technology.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/report">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3">
+                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  Report a Crime
+                </Button>
+              </Link>
+              <Link href="/admin/checkrequest">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3">
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Admin Panel
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Our system combines the power of AI with human expertise to provide accurate and reliable crime detection
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <Camera className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl">1. Report & Upload</CardTitle>
+                <CardDescription>
+                  Submit crime reports with photos or videos and detailed descriptions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Users can easily upload media evidence and provide comprehensive information about incidents
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                  <Zap className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">2. AI Analysis</CardTitle>
+                <CardDescription>
+                  Advanced AI analyzes media content using Gemini API and LangChain
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Our RAG system processes images and videos to identify potential criminal activity and assess risk levels
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-xl">3. Human Verification</CardTitle>
+                <CardDescription>
+                  Human administrators review and verify AI findings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Expert review ensures accuracy and provides final verification decisions
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Technology Stack */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Powered by Advanced Technology
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Built with cutting-edge AI and machine learning technologies
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="text-center border-0 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                  <Shield className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle className="text-lg">LangGraph</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Orchestrates complex AI workflows with state management
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                  <Zap className="h-6 w-6 text-green-600" />
+                </div>
+                <CardTitle className="text-lg">LangChain</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Connects AI models and tools for intelligent processing
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                  <AlertTriangle className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle className="text-lg">Gemini API</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Google's advanced AI for image and video analysis
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center border-0 shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="mx-auto w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-3">
+                  <Users className="h-6 w-6 text-orange-600" />
+                </div>
+                <CardTitle className="text-lg">Human-in-the-Loop</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600">
+                  Combines AI insights with human expertise
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Key Benefits */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Key Benefits
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Why choose our AI-powered crime detection system
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Accurate Detection</h3>
+                  <p className="text-gray-600">
+                    Advanced AI algorithms provide high-accuracy crime detection with detailed analysis
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Clock className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Fast Processing</h3>
+                  <p className="text-gray-600">
+                    Real-time analysis and quick response times for urgent situations
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield className="h-4 w-4 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure & Private</h3>
+                  <p className="text-gray-600">
+                    Enterprise-grade security with data encryption and privacy protection
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-primary border-primary animate-pulse-glow bg-primary/5">
-                <Zap className="h-3 w-3 mr-1" />
-                Live Data
-              </Badge>
-              {getActiveFilterCount() > 0 && (
-                <Badge className="bg-gradient-to-r from-primary to-secondary text-white shadow-lg">
-                  <Database className="h-3 w-3 mr-1" />
-                  {getActiveFilterCount()} filters active
-                </Badge>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:bg-primary/10 hover:border-primary transition-all duration-300 bg-transparent"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Export Data
+
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Users className="h-4 w-4 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Human Oversight</h3>
+                  <p className="text-gray-600">
+                    Expert review ensures quality and provides accountability for all decisions
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="h-4 w-4 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Comprehensive Analytics</h3>
+                  <p className="text-gray-600">
+                    Detailed insights and reporting for law enforcement and administrators
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Zap className="h-4 w-4 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Scalable Solution</h3>
+                  <p className="text-gray-600">
+                    Built to handle high volumes and grow with your organization's needs
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
+            Join the future of crime detection and help make your community safer
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/report">
+              <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                Report a Crime
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
-            </div>
+            </Link>
+            <Link href="/admin/checkrequest">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Access Admin Panel
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
-        {/* Key Metrics Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <AIHologramPanel
-            title="Total Crimes"
-            value={crimeStats?.totalCrimes || 24567}
-            trend={crimeStats?.trendPercentage || 12.5}
-            trendLabel="from last month"
-            icon={AlertTriangle}
-            color="#ef4444"
-            sparklineData={mockSparklineData}
-            prediction={{
-              nextValue: "26,200",
-              confidence: 87,
-              direction: "up",
-            }}
-            loading={loading}
-          />
-
-          <AIHologramPanel
-            title="Crime Rate"
-            value={`${crimeStats?.crimeRate || 2.3}%`}
-            trend={-0.8}
-            trendLabel="from last month"
-            icon={TrendingUp}
-            color="#06b6d4"
-            sparklineData={mockSparklineData.map((d) => ({ ...d, value: d.value * 0.6 }))}
-            prediction={{
-              nextValue: "2.1%",
-              confidence: 82,
-              direction: "down",
-            }}
-            loading={loading}
-          />
-
-          <AIHologramPanel
-            title="Active Regions"
-            value={crimeStats?.activeRegions || 28}
-            trend={0}
-            trendLabel="States & UTs"
-            icon={MapPin}
-            color="#10b981"
-            sparklineData={mockSparklineData.map((d) => ({ ...d, value: 28 }))}
-            prediction={{
-              nextValue: 28,
-              confidence: 95,
-              direction: "stable",
-            }}
-            loading={loading}
-          />
-
-          <AIHologramPanel
-            title="Population Coverage"
-            value={`${((crimeStats?.populationCoverage || 1400000000) / 1000000000).toFixed(1)}B`}
-            trend={2.1}
-            trendLabel="citizens monitored"
-            icon={Users}
-            color="#8b5cf6"
-            sparklineData={mockSparklineData.map((d) => ({ ...d, value: d.value * 1.2 }))}
-            prediction={{
-              nextValue: "1.42B",
-              confidence: 91,
-              direction: "up",
-            }}
-            loading={loading}
-          />
-        </div>
-
-        {/* Main Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar - Filters and Overlay Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="cyber-border">
-              <AdvancedFilterPanel
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onApplyFilters={handleApplyFilters}
-                onResetFilters={handleResetFilters}
-                activeFilterCount={getActiveFilterCount()}
-              />
-            </div>
-            <div className="cyber-border">
-              <EconomicOverlayControls onOverlayChange={handleEconomicOverlayChange} />
-            </div>
-            <div className="cyber-border">
-              <SatelliteOverlayControls onOverlayChange={handleSatelliteOverlayChange} />
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="cyber-border">
-              <CrimeHeatMap filters={filters} />
-            </div>
-
-            {/* Analysis Components */}
-            <div className="grid grid-cols-1 gap-6">
-              <div className="cyber-border">
-                <SocioEconomicInsights />
-              </div>
-              <div className="cyber-border">
-                <SatelliteDataAnalysis />
-              </div>
-            </div>
-
-            {/* AI Insight Panel */}
-            <AIInsightPanel />
-          </div>
-        </div>
-      </div>
-
-      {/* AI Assistant Button */}
-      <AIAssistantButton onQuery={handleAIQuery} />
+      </section>
     </div>
   )
 }

@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  crimeReports CrimeReport[]
+  verifications HumanVerification[]
+
+  @@map("users")
+}
+
+model CrimeReport {
+  id          String   @id @default(cuid())
+  userId      String
+  timestamp   DateTime @default(now())
+  location    String
+  description String
+  mediaUrls   String[] // Base64 encoded media files
+  mediaType   MediaType
+  status      ReportStatus @default(PENDING)
+  priority    Priority @default(MEDIUM)
+  category    String
+  
+  // Coordinates (optional)
+  latitude    Float?
+  longitude   Float?
+  
+  // AI Analysis
+  aiAnalysis  AIAnalysis?
+  
+  // Human Verification
+  humanVerification HumanVerification?
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("crime_reports")
+}
+
+model AIAnalysis {
+  id          String   @id @default(cuid())
+  crimeReportId String @unique
+  confidence  Int      // 0-100
+  crimeType   String
+  severity    Severity
+  description String
+  riskFactors String[] // Array of risk factors
+  recommendations String[] // Array of recommendations
+  
+  // Extracted entities
+  people      String[]
+  vehicles    String[]
+  weapons     String[]
+  locations   String[]
+  objects     String[]
+  
+  // Relations
+  crimeReport CrimeReport @relation(fields: [crimeReportId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_analyses")
+}
+
+model HumanVerification {
+  id          String   @id @default(cuid())
+  crimeReportId String @unique
+  verifiedBy  String
+  verifiedAt  DateTime @default(now())
+  isVerified  Boolean
+  notes       String
+  confidence  Int      // 0-100
+  requiresFollowUp Boolean @default(false)
+  
+  // Relations
+  crimeReport CrimeReport @relation(fields: [crimeReportId], references: [id], onDelete: Cascade)
+  admin       User       @relation(fields: [verifiedBy], references: [id])
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("human_verifications")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+enum ReportStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
