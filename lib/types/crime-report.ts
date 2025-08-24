@@ -9,7 +9,7 @@ export interface CrimeReport {
   status: 'pending' | 'verified' | 'rejected';
   aiAnalysis: AIAnalysis;
   humanVerification?: HumanVerification;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   category: string;
   coordinates?: {
     latitude: number;
@@ -20,7 +20,7 @@ export interface CrimeReport {
 export interface AIAnalysis {
   confidence: number;
   crimeType: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   riskFactors: string[];
   recommendations: string[];
@@ -33,13 +33,13 @@ export interface AIAnalysis {
   };
 }
 
-export interface HumanVerification {
+export interface HumanVerification {  
   verifiedBy: string;
   verifiedAt: Date;
   isVerified: boolean;
   notes: string;
   confidence: number;
-  requiresFollowUp: boolean;
+  requiresFolLOWUp: boolean;
 }
 
 export interface CrimeReportRequest {
@@ -47,7 +47,7 @@ export interface CrimeReportRequest {
   description: string;
   mediaFiles: File[];
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   coordinates?: {
     latitude: number;
     longitude: number;

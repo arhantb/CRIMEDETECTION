@@ -25,7 +25,7 @@ export class GeminiService {
         
         Please analyze the image and provide:
         1. Crime type classification
-        2. Severity level (low/medium/high/critical)
+        2. Severity level (LOW/MEDIUM/HIGH/CRITICAL)
         3. Confidence score (0-100)
         4. Risk factors identified
         5. Recommendations for law enforcement
@@ -35,7 +35,7 @@ export class GeminiService {
         {
           "confidence": number,
           "crimeType": "string",
-          "severity": "low|medium|high|critical",
+          "severity": "LOW|MEDIUM|HIGH|CRITICAL",
           "description": "string",
           "riskFactors": ["string"],
           "recommendations": ["string"],
@@ -72,7 +72,7 @@ export class GeminiService {
       return {
         confidence: analysis.confidence || 0,
         crimeType: analysis.crimeType || 'Unknown',
-        severity: analysis.severity || 'low',
+        severity: analysis.severity || 'LOW',
         description: analysis.description || 'No description available',
         riskFactors: analysis.riskFactors || [],
         recommendations: analysis.recommendations || [],
@@ -100,7 +100,7 @@ export class GeminiService {
         
         Please analyze the video and provide:
         1. Crime type classification
-        2. Severity level (low/medium/high/critical)
+        2. Severity level (LOW/MEDIUM/HIGH/CRITICAL)
         3. Confidence score (0-100)
         4. Risk factors identified
         5. Recommendations for law enforcement
@@ -110,7 +110,7 @@ export class GeminiService {
         {
           "confidence": number,
           "crimeType": "string",
-          "severity": "low|medium|high|critical",
+          "severity": "LOW|MEDIUM|HIGH|CRITICAL",
           "description": "string",
           "riskFactors": ["string"],
           "recommendations": ["string"],
@@ -146,7 +146,7 @@ export class GeminiService {
       return {
         confidence: analysis.confidence || 0,
         crimeType: analysis.crimeType || 'Unknown',
-        severity: analysis.severity || 'low',
+        severity: analysis.severity || 'LOW',
         description: analysis.description || 'No description available',
         riskFactors: analysis.riskFactors || [],
         recommendations: analysis.recommendations || [],
@@ -168,7 +168,7 @@ export class GeminiService {
     return {
       confidence: 0,
       crimeType: 'Unknown',
-      severity: 'low',
+      severity: 'LOW',
       description: 'Analysis failed - manual review required',
       riskFactors: ['Manual review needed'],
       recommendations: ['Requires human verification'],
