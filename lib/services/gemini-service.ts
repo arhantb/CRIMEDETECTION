@@ -12,7 +12,7 @@ export class GeminiService {
     }
     
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   async analyzeImage(imageData: string, description: string): Promise<AIAnalysis> {
@@ -67,6 +67,7 @@ export class GeminiService {
       }
       
       const analysis = JSON.parse(jsonMatch[0]);
+      console.log(analysis);
       
       return {
         confidence: analysis.confidence || 0,
@@ -140,6 +141,7 @@ export class GeminiService {
       }
       
       const analysis = JSON.parse(jsonMatch[0]);
+      console.log(analysis);
       
       return {
         confidence: analysis.confidence || 0,

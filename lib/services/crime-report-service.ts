@@ -43,7 +43,7 @@ export class CrimeReportService {
       // Update the report with AI analysis results
       await this.database.updateCrimeReport(reportId, {
         aiAnalysis: workflowResult.aiAnalysis,
-        status: workflowResult.finalDecision === 'verified' ? 'verified' : 'pending'
+        status: workflowResult.finalDecision === 'verified' ? 'VERIFIED' : 'PENDING'
       });
 
       console.log(`Report ${reportId} processed with status: ${workflowResult.finalDecision}`);

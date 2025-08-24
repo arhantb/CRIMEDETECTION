@@ -48,6 +48,10 @@ export interface CrimeReportRequest {
   mediaFiles: File[];
   category: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface AdminDashboardStats {

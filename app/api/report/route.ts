@@ -15,6 +15,10 @@ export async function POST(request: NextRequest) {
     const priority = formData.get('priority') as 'low' | 'medium' | 'high' | 'critical';
     const mediaFiles = formData.getAll('mediaFiles') as File[];
     
+    // Extract coordinates if available
+    const latitude = formData.get('latitude') as string;
+    const longitude = formData.get('longitude') as string;
+    
     // Validate required fields
     if (!location || !description || !category || !priority || mediaFiles.length === 0) {
       return NextResponse.json(
@@ -50,7 +54,11 @@ export async function POST(request: NextRequest) {
       description,
       mediaFiles,
       category,
-      priority
+      priority,
+      coordinates: latitude && longitude ? {
+        latitude: parseFloat(latitude),
+        longitude: parseFloat(longitude)
+      } : undefined
     };
 
     // For demonstration, using a mock user ID

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Camera, Video, MapPin, FileText, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Upload, Camera, Video, MapPin, FileText, AlertTriangle, CheckCircle, Navigation, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ReportPage() {
@@ -18,6 +18,8 @@ export default function ReportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'loading'>('prompt');
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number; address: string } | null>(null);
   const [formData, setFormData] = useState({
     location: '',
     description: '',
@@ -27,6 +29,92 @@ export default function ReportPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Location handling functions
+  const getCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser');
+      setLocationPermission('denied');
+      return;
+    }
+
+    setLocationPermission('loading');
+    
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Get address from coordinates using reverse geocoding
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+        );
+        const data = await response.json();
+        const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        
+        setCurrentLocation({ latitude, longitude, address });
+        setFormData(prev => ({ ...prev, location: address }));
+        setLocationPermission('granted');
+        toast.success('Location obtained successfully!');
+      } catch (error) {
+        // Fallback to coordinates if reverse geocoding fails
+        const address = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+        setCurrentLocation({ latitude, longitude, address });
+        setFormData(prev => ({ ...prev, location: address }));
+        setLocationPermission('granted');
+        toast.success('Location obtained successfully!');
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      if (error instanceof GeolocationPositionError) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error('Location permission denied. Please enable location access to submit a report.');
+            setLocationPermission('denied');
+            break;
+          case error.POSITION_UNAVAILABLE:
+            toast.error('Location information unavailable. Please try again.');
+            setLocationPermission('denied');
+            break;
+          case error.TIMEOUT:
+            toast.error('Location request timed out. Please try again.');
+            setLocationPermission('denied');
+            break;
+          default:
+            toast.error('Failed to get location. Please try again.');
+            setLocationPermission('denied');
+        }
+      } else {
+        toast.error('Failed to get location. Please try again.');
+        setLocationPermission('denied');
+      }
+    }
+  };
+
+  const requestLocationPermission = () => {
+    getCurrentLocation();
+  };
+
+  // Check location permission on component mount
+  useEffect(() => {
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (result.state === 'granted') {
+          setLocationPermission('granted');
+          getCurrentLocation();
+        } else if (result.state === 'denied') {
+          setLocationPermission('denied');
+        }
+      });
+    }
+  }, []);
 
   const crimeCategories = [
     'Theft',
@@ -87,8 +175,8 @@ export default function ReportPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+    if (locationPermission !== 'granted') {
+      newErrors.location = 'Location permission is required. Please allow location access to submit a report.';
     }
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
@@ -121,6 +209,12 @@ export default function ReportPage() {
       submitData.append('category', formData.category);
       submitData.append('priority', formData.priority);
       
+      // Add coordinates if available
+      if (currentLocation) {
+        submitData.append('latitude', currentLocation.latitude.toString());
+        submitData.append('longitude', currentLocation.longitude.toString());
+      }
+      
       mediaFiles.forEach(file => {
         submitData.append('mediaFiles', file);
       });
@@ -133,8 +227,11 @@ export default function ReportPage() {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success('Crime report submitted successfully!');
-        router.push('/');
+        toast.success('Crime report submitted successfully! Your report has been received and is being processed.');
+        // Wait a moment for the toast to be visible before redirecting
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
       } else {
         throw new Error(result.error || 'Failed to submit report');
       }
@@ -258,24 +355,96 @@ export default function ReportPage() {
               )}
             </div>
 
+            {/* Location Section */}
+            <div className="space-y-4">
+              <Label className="text-base font-semibold">
+                <MapPin className="h-4 w-4 inline mr-2" />
+                Location Permission *
+              </Label>
+              
+              {locationPermission === 'prompt' && (
+                <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center bg-blue-50">
+                  <Navigation className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Enable Location Access</h3>
+                  <p className="text-blue-700 mb-4">
+                    To submit a crime report, we need your current location. This helps law enforcement respond quickly and accurately.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={requestLocationPermission}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Allow Location Access
+                  </Button>
+                </div>
+              )}
+
+              {locationPermission === 'loading' && (
+                <div className="border-2 border-dashed border-yellow-300 rounded-lg p-6 text-center bg-yellow-50">
+                  <Loader2 className="h-12 w-12 text-yellow-500 mx-auto mb-4 animate-spin" />
+                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">Getting Your Location</h3>
+                  <p className="text-yellow-700">
+                    Please wait while we determine your current location...
+                  </p>
+                </div>
+              )}
+
+              {locationPermission === 'granted' && currentLocation && (
+                <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <div>
+                        <h4 className="font-semibold text-green-900">Location Obtained</h4>
+                        <p className="text-sm text-green-700">{currentLocation.address}</p>
+                        <p className="text-xs text-green-600">
+                          Coordinates: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={getCurrentLocation}
+                      className="text-green-700 border-green-300 hover:bg-green-100"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {locationPermission === 'denied' && (
+                <div className="border-2 border-red-300 rounded-lg p-6 text-center bg-red-50">
+                  <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-red-900 mb-2">Location Access Required</h3>
+                  <p className="text-red-700 mb-4">
+                    Location permission is required to submit a crime report. Please enable location access in your browser settings.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={requestLocationPermission}
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-100"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                </div>
+              )}
+
+              {errors.location && (
+                <Alert variant="destructive">
+                  <AlertDescription>{errors.location}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="location">
-                  <MapPin className="h-4 w-4 inline mr-2" />
-                  Location *
-                </Label>
-                <Input
-                  id="location"
-                  placeholder="Enter the location where the incident occurred"
-                  value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  className={errors.location ? 'border-red-500' : ''}
-                />
-                {errors.location && (
-                  <p className="text-sm text-red-500">{errors.location}</p>
-                )}
-              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="category">

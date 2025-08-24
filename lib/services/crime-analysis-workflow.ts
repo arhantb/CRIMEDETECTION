@@ -1,4 +1,3 @@
-import { StateGraph, END } from '@langchain/langgraph';
 import { GeminiService } from './gemini-service';
 import { CrimeReport, AIAnalysis, HumanVerification } from '../types/crime-report';
 
@@ -13,53 +12,9 @@ interface WorkflowState {
 
 export class CrimeAnalysisWorkflow {
   private geminiService: GeminiService;
-  private workflow: StateGraph<WorkflowState>;
 
   constructor() {
     this.geminiService = new GeminiService();
-    this.workflow = this.createWorkflow();
-  }
-
-  private createWorkflow(): StateGraph<WorkflowState> {
-    const workflow = new StateGraph<WorkflowState>({
-      channels: {
-        crimeReport: { value: null },
-        aiAnalysis: { value: null },
-        humanVerification: { value: null },
-        currentStep: { value: 'initial' },
-        requiresHumanReview: { value: false },
-        finalDecision: { value: 'pending' }
-      }
-    });
-
-    // Add nodes
-    workflow.addNode('analyzeMedia', this.analyzeMedia.bind(this));
-    workflow.addNode('assessRisk', this.assessRisk.bind(this));
-    workflow.addNode('determineReview', this.determineReview.bind(this));
-    workflow.addNode('humanReview', this.humanReview.bind(this));
-    workflow.addNode('finalizeDecision', this.finalizeDecision.bind(this));
-
-    // Add edges
-    workflow.addEdge('analyzeMedia', 'assessRisk');
-    workflow.addEdge('assessRisk', 'determineReview');
-    
-    // Conditional edge based on risk assessment
-    workflow.addConditionalEdges(
-      'determineReview',
-      this.shouldRequireHumanReview.bind(this),
-      {
-        'human_review': 'humanReview',
-        'auto_approve': 'finalizeDecision'
-      }
-    );
-    
-    workflow.addEdge('humanReview', 'finalizeDecision');
-    workflow.addEdge('finalizeDecision', END);
-
-    // Set entry point
-    workflow.setEntryPoint('analyzeMedia');
-
-    return workflow;
   }
 
   private async analyzeMedia(state: WorkflowState): Promise<Partial<WorkflowState>> {
@@ -101,12 +56,12 @@ export class CrimeAnalysisWorkflow {
       ...aiAnalysis,
       riskFactors: [
         ...aiAnalysis.riskFactors,
-        this.calculateAdditionalRiskFactors(aiAnalysis)
-      ].filter(Boolean),
+        ...this.calculateAdditionalRiskFactors(aiAnalysis)
+      ],
       recommendations: [
         ...aiAnalysis.recommendations,
-        this.generateRiskBasedRecommendations(aiAnalysis)
-      ].filter(Boolean)
+        ...this.generateRiskBasedRecommendations(aiAnalysis)
+      ]
     };
 
     return {
@@ -239,8 +194,27 @@ export class CrimeAnalysisWorkflow {
     };
 
     try {
-      const result = await this.workflow.invoke(initialState);
-      return result;
+      // Execute the workflow steps sequentially
+      let state = initialState;
+      
+      // Step 1: Analyze media
+      state = { ...state, ...(await this.analyzeMedia(state)) };
+      
+      // Step 2: Assess risk
+      state = { ...state, ...(await this.assessRisk(state)) };
+      
+      // Step 3: Determine if human review is needed
+      state = { ...state, ...(await this.determineReview(state)) };
+      
+      // Step 4: If human review is needed, simulate it
+      if (state.requiresHumanReview) {
+        state = { ...state, ...(await this.humanReview(state)) };
+      }
+      
+      // Step 5: Finalize decision
+      state = { ...state, ...(await this.finalizeDecision(state)) };
+      
+      return state;
     } catch (error) {
       console.error('Workflow execution failed:', error);
       return {

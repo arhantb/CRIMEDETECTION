@@ -19,6 +19,10 @@ export class DatabaseService {
           priority: request.priority.toUpperCase() as any,
           category: request.category,
           status: 'PENDING',
+          ...(request.coordinates && {
+            latitude: request.coordinates.latitude,
+            longitude: request.coordinates.longitude
+          }),
           aiAnalysis: {
             create: {
               confidence: 0,
@@ -47,7 +51,11 @@ export class DatabaseService {
       console.error('Error creating crime report:', error);
       
       // If database is not available, create a mock response for development
-      if (error instanceof Error && error.message.includes('database')) {
+      if (error instanceof Error && (
+        error.message.includes('database') || 
+        error.message.includes('Can\'t reach database') ||
+        error.message.includes('P1001')
+      )) {
         console.log('Database not available, using mock response for development');
         return this.createMockCrimeReport(request, userId);
       }
@@ -75,7 +83,11 @@ export class DatabaseService {
       console.error('Error fetching crime reports:', error);
       
       // If database is not available, return mock data for development
-      if (error instanceof Error && error.message.includes('database')) {
+      if (error instanceof Error && (
+        error.message.includes('database') || 
+        error.message.includes('Can\'t reach database') ||
+        error.message.includes('P1001')
+      )) {
         console.log('Database not available, using mock data for development');
         return this.getMockCrimeReports();
       }
