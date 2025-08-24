@@ -137,11 +137,10 @@ export default function AdminCheckRequestPage() {
     if (!selectedReport) return;
 
     try {
-      const response = await fetch('/api/admin/verify', {
+      const response = await fetch('/api/admin/verify?admin_token=admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer admin'
         },
         body: JSON.stringify({
           reportId: selectedReport.id,
@@ -150,6 +149,12 @@ export default function AdminCheckRequestPage() {
           notes: verificationData.notes
         }),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response not ok:', response.status, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
 
       const data = await response.json();
 

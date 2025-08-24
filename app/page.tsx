@@ -27,11 +27,16 @@ export default function HomePage() {
       href: '/admin/checkrequest',
       label: 'Admin Panel',
       icon: BarChart3
-    }
-    ,{
-        href:'/predictions',
-        label:'Predictions',
-        icon:BarChart3
+    },
+    {
+      href: '/test-ai',
+      label: 'Test AI',
+      icon: BarChart3
+    },
+    {
+      href: '/predictions',
+      label: 'Predictions',
+      icon: BarChart3
     }
   ];
 

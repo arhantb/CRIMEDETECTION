@@ -19,13 +19,18 @@ export async function POST(request: NextRequest) {
   try {
     // Check admin authentication
     if (!isAdminAuthenticated(request)) {
+      console.log('Admin authentication failed');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 401 }
       );
     }
 
+    console.log('Admin authenticated, processing verification request');
+    
     const { reportId, adminId, isVerified, notes } = await request.json();
+    
+    console.log('Verification request:', { reportId, adminId, isVerified, notes });
     
     // Validate required fields
     if (!reportId || !adminId || typeof isVerified !== 'boolean') {
@@ -36,6 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the report
+    console.log('Calling verifyReport service...');
     const updatedReport = await crimeReportService.verifyReport(
       reportId,
       adminId,
@@ -50,6 +56,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Report verified successfully:', updatedReport.id);
     return NextResponse.json({
       success: true,
       report: updatedReport,
@@ -59,7 +66,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error verifying crime report:', error);
     return NextResponse.json(
-      { error: 'Failed to verify crime report' },
+      { error: 'Failed to verify crime report', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
