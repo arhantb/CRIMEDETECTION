@@ -3,8 +3,28 @@ import { CrimeReportService } from '@/lib/services/crime-report-service';
 
 const crimeReportService = new CrimeReportService();
 
+// Simple admin authentication check
+function isAdminAuthenticated(request: NextRequest): boolean {
+  // In a real app, you'd check JWT tokens or session cookies
+  // For now, we'll check a simple header or query parameter
+  const authHeader = request.headers.get('authorization');
+  const adminToken = request.nextUrl.searchParams.get('admin_token');
+  
+  // Check if admin is authenticated (this is a simplified check)
+  // In production, implement proper JWT validation
+  return authHeader === 'Bearer admin' || adminToken === 'admin';
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Check admin authentication
+    if (!isAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 401 }
+      );
+    }
+
     const { reportId, adminId, isVerified, notes } = await request.json();
     
     // Validate required fields
@@ -47,6 +67,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check admin authentication
+    if (!isAdminAuthenticated(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');

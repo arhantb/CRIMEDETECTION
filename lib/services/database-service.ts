@@ -366,17 +366,17 @@ export class DatabaseService {
   // Helper methods
   private async getOrCreateUser(userId: string, role: 'USER' | 'ADMIN' | 'MODERATOR' = 'USER') {
     try {
-      // Try to find existing user
+      // Try to find existing user by Clerk ID
       let user = await prisma.user.findFirst({
-        where: { id: userId }
+        where: { clerkId: userId }
       });
 
       if (!user) {
         // Create new user if not found
         user = await prisma.user.create({
           data: {
-            id: userId,
-            email: `${userId}@example.com`, // Placeholder email
+            clerkId: userId,
+            email: `${userId}@clerk.user`, // Placeholder email
             name: `User ${userId}`,
             role
           }

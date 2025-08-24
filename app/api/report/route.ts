@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { CrimeReportService } from '@/lib/services/crime-report-service';
 import { CrimeReportRequest } from '@/lib/types/crime-report';
 
@@ -6,6 +7,16 @@ const crimeReportService = new CrimeReportService();
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user from Clerk
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     
     // Extract form data
@@ -61,11 +72,7 @@ export async function POST(request: NextRequest) {
       } : undefined
     };
 
-    // For demonstration, using a mock user ID
-    // In production, this would come from authentication
-    const userId = 'user_' + Date.now();
-
-    // Submit the report
+    // Submit the report using Clerk user ID
     const crimeReport = await crimeReportService.submitReport(crimeReportRequest, userId);
 
     return NextResponse.json({

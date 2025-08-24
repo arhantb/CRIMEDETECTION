@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,12 +26,16 @@ import {
   MapPin,
   Calendar,
   FileText,
-  BarChart3
+  BarChart3,
+  LogOut
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CrimeReport, AdminDashboardStats } from '@/lib/types/crime-report';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
 
 export default function AdminCheckRequestPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [reports, setReports] = useState<CrimeReport[]>([]);
   const [filteredReports, setFilteredReports] = useState<CrimeReport[]>([]);
   const [selectedReport, setSelectedReport] = useState<CrimeReport | null>(null);
@@ -57,10 +62,19 @@ export default function AdminCheckRequestPage() {
     notes: ''
   });
 
+  // Check if admin is authenticated
   useEffect(() => {
-    fetchReports();
-    fetchStats();
-  }, []);
+    if (!authLoading && !isAuthenticated) {
+      router.push('/admin/login');
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchReports();
+      fetchStats();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     applyFilters();
@@ -68,7 +82,7 @@ export default function AdminCheckRequestPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('/api/admin/verify');
+      const response = await fetch('/api/admin/verify?admin_token=admin');
       const data = await response.json();
       
       if (data.success) {
@@ -84,7 +98,7 @@ export default function AdminCheckRequestPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/stats');
+      const response = await fetch('/api/admin/stats?admin_token=admin');
       const data = await response.json();
       
       if (data.success) {
@@ -127,6 +141,7 @@ export default function AdminCheckRequestPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer admin'
         },
         body: JSON.stringify({
           reportId: selectedReport.id,
@@ -181,7 +196,7 @@ export default function AdminCheckRequestPage() {
     });
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
@@ -191,13 +206,23 @@ export default function AdminCheckRequestPage() {
     );
   }
 
+  if (!isAuthenticated) {
+    return null; // Will redirect to login
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">
-          Review and verify crime reports submitted by users
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+          <p className="text-gray-600">
+            Review and verify crime reports submitted by users
+          </p>
+        </div>
+        <Button onClick={logout} variant="outline" className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
       </div>
 
       {/* Statistics Cards */}

@@ -4,6 +4,7 @@ import CrimeReportNav from '@/components/crime-report-nav'
 
 import type React from "react"
 import { DM_Sans } from "next/font/google"
+import { ClerkProvider } from '@clerk/nextjs'
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -24,13 +25,22 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+    <ClerkProvider
+    appearance={{
+      variables: {
+        colorPrimary: "#3371FF",
+        fontSize: "16px",
+      },
+    }}
+  >
     <html lang="en">
       <body className={`${dmSans.variable} antialiased`}>
-        <CrimeReportNav />
+        {/* <CrimeReportNav /> */}
         <main>
           {children}
         </main>
       </body>
     </html>
+    </ClerkProvider>
   )
 }
