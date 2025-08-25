@@ -11,12 +11,6 @@ export default function Navigation() {
 
   const navItems = [
     {
-      href: "/",
-      label: "Main Dashboard",
-      icon: Home,
-      description: "Crime Analytics & Heat Maps"
-    },
-    {
       href: "/timeline-predictions",
       label: "Timeline Predictions",
       icon: Calendar,

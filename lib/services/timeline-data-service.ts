@@ -22,25 +22,18 @@ class TimelineDataService {
         throw new Error("CSV file must contain at least a header row and one data row")
       }
 
-      // More robust CSV parsing - handle potential quotes and different delimiters
+      // Add file size limit
+      if (lines.length > 100000) {
+        throw new Error("File too large. Please use a CSV file with fewer than 100,000 rows for better performance.")
+      }
+
+      // Add timeout protection
+      const startTime = Date.now()
+      const maxProcessingTime = 30000 // 30 seconds max
+
+      // Fast CSV parsing - simple split for better performance
       const parseCSVLine = (line: string) => {
-        const result = []
-        let current = ''
-        let inQuotes = false
-        
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i]
-          if (char === '"') {
-            inQuotes = !inQuotes
-          } else if (char === ',' && !inQuotes) {
-            result.push(current.trim())
-            current = ''
-          } else {
-            current += char
-          }
-        }
-        result.push(current.trim())
-        return result
+        return line.split(',').map(field => field.trim().replace(/^"|"$/g, ''))
       }
       
       const headers = parseCSVLine(lines[0])
@@ -66,19 +59,23 @@ class TimelineDataService {
         throw new Error(`Missing required columns: ${missing.join(', ')}`)
       }
       
-      // Process data in chunks for better performance with larger chunk size
-      const chunkSize = 5000 // Increased chunk size for better performance
+      // Process data in chunks for better performance with smaller chunk size for better responsiveness
+      const chunkSize = 1000 // Reduced chunk size for better responsiveness
       const dataChunks = []
       let processedRows = 0
       
       for (let i = 1; i < lines.length; i += chunkSize) {
+        // Check timeout
+        if (Date.now() - startTime > maxProcessingTime) {
+          throw new Error("Processing timeout: File is too large. Please try with a smaller dataset.")
+        }
         const chunk = lines.slice(i, i + chunkSize).map((line, chunkIndex) => {
           const index = i + chunkIndex - 1
           const values = parseCSVLine(line)
           
-          const maxColumnIndex = Math.max(latIndex, lngIndex, crimeGroupIndex, yearIndex, monthIndex, districtIndex)
-          if (values.length < maxColumnIndex + 1) {
-            throw new Error(`Row ${index + 2} has insufficient data. Expected at least ${maxColumnIndex + 1} columns, found ${values.length}`)
+          // Quick validation - only check if we have enough columns
+          if (values.length <= Math.max(latIndex, lngIndex, crimeGroupIndex, yearIndex, monthIndex, districtIndex)) {
+            return null // Skip invalid rows instead of throwing error
           }
           
           const lat = values[latIndex]
@@ -88,38 +85,18 @@ class TimelineDataService {
           const month = values[monthIndex]
           const district = values[districtIndex]
           
-          // Validate numeric values
+          // Fast numeric conversion with minimal validation
           const latitude = parseFloat(lat)
           const longitude = parseFloat(lng)
           const yearNum = parseInt(year)
           const monthNum = parseInt(month)
           
-          if (isNaN(latitude) || isNaN(longitude)) {
-            throw new Error(`Row ${index + 2}: Invalid coordinates. Latitude and longitude must be numbers.`)
-          }
-          
-          // Validate coordinate ranges
-          if (latitude < -90 || latitude > 90) {
-            throw new Error(`Row ${index + 2}: Invalid latitude. Must be between -90 and 90.`)
-          }
-          if (longitude < -180 || longitude > 180) {
-            throw new Error(`Row ${index + 2}: Invalid longitude. Must be between -180 and 180.`)
-          }
-          
-          if (isNaN(yearNum) || yearNum < 1900 || yearNum > 2100) {
-            throw new Error(`Row ${index + 2}: Invalid year. Year must be a number between 1900 and 2100.`)
-          }
-          
-          if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-            throw new Error(`Row ${index + 2}: Invalid month. Month must be a number between 1 and 12.`)
-          }
-          
-          if (!crimeGroup || crimeGroup.trim() === '') {
-            throw new Error(`Row ${index + 2}: Crime group name is missing.`)
-          }
-          
-          if (!district || district.trim() === '') {
-            throw new Error(`Row ${index + 2}: District name is missing.`)
+          // Skip invalid data instead of throwing errors
+          if (isNaN(latitude) || isNaN(longitude) || isNaN(yearNum) || isNaN(monthNum) ||
+              latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 ||
+              yearNum < 1900 || yearNum > 2100 || monthNum < 1 || monthNum > 12 ||
+              !crimeGroup || !district) {
+            return null
           }
           
           const date = new Date(yearNum, monthNum - 1, 1)
@@ -135,19 +112,19 @@ class TimelineDataService {
             date: date.toISOString(),
             timestamp: date.getTime()
           }
-        })
+        }).filter((item): item is TimelineDataPoint => item !== null) // Remove null entries
         
         dataChunks.push(...chunk)
         processedRows += chunk.length
         
         // Progress logging for large files
-        if (processedRows % 50000 === 0) {
+        if (processedRows % 5000 === 0) {
           console.log(`Processed ${processedRows.toLocaleString()} rows...`)
         }
         
-        // Allow other operations to run between chunks (reduced frequency)
-        if (i + chunkSize < lines.length && processedRows % 10000 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 1))
+        // Allow other operations to run between chunks (more frequent)
+        if (i + chunkSize < lines.length && processedRows % 1000 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 10))
         }
       }
       
@@ -178,6 +155,7 @@ class TimelineDataService {
         timestamp: new Date().toISOString()
       }
     } catch (error) {
+      console.error("CSV processing error:", error)
       return {
         data: {} as TimelineStats,
         status: "error",
