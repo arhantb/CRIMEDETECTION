@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Camera, Video, MapPin, FileText, AlertTriangle, CheckCircle, Navigation, Loader2 } from 'lucide-react';
+import { Upload, Camera, Video, MapPin, FileText, AlertTriangle, CheckCircle, Navigation, Loader2, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ReportPage() {
@@ -26,7 +26,8 @@ export default function ReportPage() {
     location: '',
     description: '',
     category: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical'
+    priority: 'medium' as 'low' | 'medium' | 'high' | 'critical',
+    userPublicKey: '' // Added public key field
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -189,6 +190,18 @@ export default function ReportPage() {
     setPreviewUrls(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Function to validate Solana public key format
+  const isValidSolanaPublicKey = (key: string) => {
+    if (!key || key.length < 32 || key.length > 44) return false;
+    try {
+      // Basic base58 character check
+      const base58Regex = /^[1-9A-HJ-NP-Za-km-z]+$/;
+      return base58Regex.test(key);
+    } catch {
+      return false;
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -203,6 +216,11 @@ export default function ReportPage() {
     }
     if (mediaFiles.length === 0) {
       newErrors.mediaFiles = 'At least one photo or video is required';
+    }
+    if (!formData.userPublicKey.trim()) {
+      newErrors.userPublicKey = 'Solana wallet public key is required for rewards';
+    } else if (!isValidSolanaPublicKey(formData.userPublicKey.trim())) {
+      newErrors.userPublicKey = 'Please enter a valid Solana public key (32-44 characters, base58 encoded)';
     }
 
     setErrors(newErrors);
@@ -225,6 +243,7 @@ export default function ReportPage() {
       submitData.append('description', formData.description);
       submitData.append('category', formData.category);
       submitData.append('priority', formData.priority);
+      submitData.append('userPublicKey', formData.userPublicKey.trim()); // Include public key
       
       // Add coordinates if available
       if (currentLocation) {
@@ -278,6 +297,7 @@ export default function ReportPage() {
           </CardTitle>
           <CardDescription>
             Please provide accurate information to help law enforcement respond effectively.
+            Include your Solana wallet address to receive SOL rewards for verified reports.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -372,6 +392,51 @@ export default function ReportPage() {
               )}
             </div>
 
+            {/* Solana Wallet Public Key Section */}
+            <div className="space-y-4">
+              <Label htmlFor="userPublicKey" className="text-base font-semibold">
+                <Wallet className="h-4 w-4 inline mr-2" />
+                Solana Wallet Public Key *
+              </Label>
+              
+              <div className="border-2 border-dashed border-purple-300 rounded-lg p-4 bg-purple-50">
+                <div className="flex items-start space-x-3 mb-3">
+                  <Wallet className="h-5 w-5 text-purple-600 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-purple-900 mb-1">🎁 Earn SOL Rewards!</h3>
+                    <p className="text-xs text-purple-700">
+                      Provide your Solana wallet address to receive SOL rewards when your report gets verified by admins.
+                      Verified reports help keep the community safer!
+                    </p>
+                  </div>
+                </div>
+                
+                <Input
+                  id="userPublicKey"
+                  placeholder="Enter your Solana public key (e.g., 11111111111111111111111111111111)"
+                  value={formData.userPublicKey}
+                  onChange={(e) => setFormData(prev => ({ ...prev, userPublicKey: e.target.value }))}
+                  className={`font-mono text-sm ${errors.userPublicKey ? 'border-red-500' : 'border-purple-300'}`}
+                />
+                
+                <div className="mt-2 text-xs text-purple-600">
+                  <p>💡 <strong>How to find your public key:</strong></p>
+                  <ul className="list-disc list-inside ml-2 mt-1 space-y-1">
+                    <li>Phantom Wallet: Settings → Your account name → Copy address</li>
+                    <li>Solflare Wallet: Click on wallet name → Copy address</li>
+                    <li>Other wallets: Look for "Receive" or "Address" option</li>
+                  </ul>
+                </div>
+              </div>
+
+              {errors.userPublicKey && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{errors.userPublicKey}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+
             {/* Location Section */}
             <div className="space-y-4">
               <Label className="text-base font-semibold">
@@ -462,7 +527,6 @@ export default function ReportPage() {
 
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
               <div className="space-y-2">
                 <Label htmlFor="category">
                   <FileText className="h-4 w-4 inline mr-2" />
@@ -566,7 +630,7 @@ export default function ReportPage() {
         <AlertDescription>
           <strong>Important:</strong> This system uses AI analysis to help process reports, 
           but all reports are reviewed by human administrators. In case of emergency, 
-          please contact local law enforcement immediately.
+          please contact local law enforcement immediately. Verified reports may receive SOL rewards!
         </AlertDescription>
       </Alert>
     </div>

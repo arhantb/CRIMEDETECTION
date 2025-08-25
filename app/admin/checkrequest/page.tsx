@@ -21,19 +21,39 @@ import {
   Clock, 
   AlertTriangle,
   Shield,
-  Users,
-  Car,
   MapPin,
   Calendar,
-  FileText,
   BarChart3,
-  LogOut
+  LogOut,
+  Wallet
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CrimeReport, AdminDashboardStats } from '@/lib/types/crime-report';
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 
+import { ConnectionProvider, WalletProvider, useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
+import {
+    WalletModalProvider,
+    WalletDisconnectButton,
+    WalletMultiButton
+} from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import '@solana/wallet-adapter-react-ui/styles.css';
+
 export default function AdminCheckRequestPage() {
+  return (
+    <ConnectionProvider endpoint={clusterApiUrl('devnet')}>
+      <WalletProvider wallets={[new UnsafeBurnerWalletAdapter()]} autoConnect>
+        <WalletModalProvider>
+          <AdminDashboardContent />
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+}
+
+function AdminDashboardContent() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [reports, setReports] = useState<CrimeReport[]>([]);
@@ -62,7 +82,14 @@ export default function AdminCheckRequestPage() {
     notes: ''
   });
 
-  // Check if admin is authenticated
+  const [showSolReward, setShowSolReward] = useState(false);
+  const [rewardAmount, setRewardAmount] = useState('0.1');
+
+  const { connection } = useConnection();
+  const wallet = useWallet();
+  const [airdropPublicKey, setAirdropPublicKey] = useState('');
+
+  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/admin/login');
@@ -79,6 +106,15 @@ export default function AdminCheckRequestPage() {
   useEffect(() => {
     applyFilters();
   }, [reports, filters]);
+
+  // Automatically set user public key from selected report
+  useEffect(() => {
+    if (selectedReport?.userPublicKey) {
+      setAirdropPublicKey(selectedReport.userPublicKey);
+    } else {
+      setAirdropPublicKey('');
+    }
+  }, [selectedReport]);
 
   const fetchReports = async () => {
     try {
@@ -112,15 +148,15 @@ export default function AdminCheckRequestPage() {
   const applyFilters = () => {
     let filtered = [...reports];
 
-         if (filters.status && filters.status !== 'all') {
-       filtered = filtered.filter(r => r.status === filters.status);
-     }
-     if (filters.priority && filters.priority !== 'all') {
-       filtered = filtered.filter(r => r.priority === filters.priority);
-     }
-         if (filters.category && filters.category !== 'all') {
-       filtered = filtered.filter(r => r.category === filters.category);
-     }
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(r => r.status === filters.status);
+    }
+    if (filters.priority && filters.priority !== 'all') {
+      filtered = filtered.filter(r => r.priority === filters.priority);
+    }
+    if (filters.category && filters.category !== 'all') {
+      filtered = filtered.filter(r => r.category === filters.category);
+    }
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(r => 
@@ -144,7 +180,7 @@ export default function AdminCheckRequestPage() {
         },
         body: JSON.stringify({
           reportId: selectedReport.id,
-          adminId: 'admin_user', // In production, get from auth
+          adminId: 'admin_user',
           isVerified: verificationData.isVerified,
           notes: verificationData.notes
         }),
@@ -160,9 +196,14 @@ export default function AdminCheckRequestPage() {
 
       if (data.success) {
         toast.success(`Report ${verificationData.isVerified ? 'verified' : 'rejected'} successfully`);
-        fetchReports(); // Refresh the list
-        setSelectedReport(null);
-        setVerificationData({ isVerified: false, notes: '' });
+        
+        if (verificationData.isVerified && wallet.connected) {
+          setShowSolReward(true);
+        } else {
+          fetchReports();
+          setSelectedReport(null);
+          setVerificationData({ isVerified: false, notes: '' });
+        }
       } else {
         throw new Error(data.error);
       }
@@ -170,6 +211,46 @@ export default function AdminCheckRequestPage() {
       console.error('Error verifying report:', error);
       toast.error('Failed to verify report');
     }
+  };
+
+  const requestAirdrop = async () => {
+    try {
+      const pubKey = new PublicKey(airdropPublicKey);
+      const signature = await connection.requestAirdrop(pubKey, 0.3 * LAMPORTS_PER_SOL);
+      await connection.confirmTransaction(signature);
+      toast.success('0.3 SOL airdropped successfully!');
+      setAirdropPublicKey('');
+    } catch (error) {
+      console.error('Airdrop error:', error);
+      toast.error('Airdrop failed. Please check the public key and try again.');
+    }
+  };
+
+  const sendRewardToUser = async (userPublicKey: string) => {
+    try {
+      const pubKey = new PublicKey(userPublicKey);
+      const amount = parseFloat(rewardAmount) * LAMPORTS_PER_SOL;
+      const signature = await connection.requestAirdrop(pubKey, amount);
+      await connection.confirmTransaction(signature);
+      toast.success(`${rewardAmount} SOL reward sent successfully!`);
+      
+      setShowSolReward(false);
+      setSelectedReport(null);
+      setVerificationData({ isVerified: false, notes: '' });
+      setRewardAmount('0.1');
+      fetchReports();
+    } catch (error) {
+      console.error('Reward sending error:', error);
+      toast.error('Failed to send reward. Please check the public key and try again.');
+    }
+  };
+
+  const skipReward = () => {
+    setShowSolReward(false);
+    setSelectedReport(null);
+    setVerificationData({ isVerified: false, notes: '' });
+    setRewardAmount('0.1');
+    fetchReports();
   };
 
   const getStatusBadge = (status: string) => {
@@ -212,7 +293,7 @@ export default function AdminCheckRequestPage() {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return null;
   }
 
   return (
@@ -224,11 +305,57 @@ export default function AdminCheckRequestPage() {
             Review and verify crime reports submitted by users
           </p>
         </div>
-        <Button onClick={logout} variant="outline" className="flex items-center gap-2">
-          <LogOut className="h-4 w-4" />
-          Logout
-        </Button>
+        <div className="flex items-center gap-4">
+          <WalletMultiButton />
+          {wallet.connected && <WalletDisconnectButton />}
+          <Button onClick={logout} variant="outline" className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </div>
+
+      {/* Solana Airdrop Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wallet className="h-5 w-5" />
+            Solana Devnet Airdrop
+          </CardTitle>
+          <CardDescription>
+            Send 0.3 SOL to users on Solana devnet for testing purposes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <Label htmlFor="airdrop-key">User's Public Key</Label>
+              <Input
+                id="airdrop-key"
+                placeholder="Enter Solana public key (e.g., 11111111111111111111111111111111)"
+                value={airdropPublicKey}
+                onChange={(e) => setAirdropPublicKey(e.target.value)}
+                className="font-mono text-sm"
+              />
+            </div>
+            <Button 
+              onClick={requestAirdrop} 
+              disabled={!airdropPublicKey.trim() || !wallet.connected}
+              className="min-w-[140px]"
+            >
+              Send 0.3 SOL
+            </Button>
+          </div>
+          {!wallet.connected && (
+            <Alert className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Please connect your wallet to send airdrops.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -321,12 +448,12 @@ export default function AdminCheckRequestPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
-                                         <SelectContent>
-                       <SelectItem value="all">All statuses</SelectItem>
-                       <SelectItem value="pending">Pending</SelectItem>
-                       <SelectItem value="verified">Verified</SelectItem>
-                       <SelectItem value="rejected">Rejected</SelectItem>
-                     </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
 
@@ -339,37 +466,37 @@ export default function AdminCheckRequestPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="All priorities" />
                     </SelectTrigger>
-                                         <SelectContent>
-                       <SelectItem value="all">All priorities</SelectItem>
-                       <SelectItem value="low">Low</SelectItem>
-                       <SelectItem value="medium">Medium</SelectItem>
-                       <SelectItem value="high">High</SelectItem>
-                       <SelectItem value="critical">Critical</SelectItem>
-                     </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="all">All priorities</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
 
-                                 <div>
-                   <Label htmlFor="category">Category</Label>
-                   <Select
-                     value={filters.category}
-                     onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
-                   >
-                     <SelectTrigger>
-                       <SelectValue placeholder="All categories" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="all">All categories</SelectItem>
-                       {Object.keys(stats.reportsByCategory)
-                         .filter(category => category && category.trim() !== '')
-                         .map((category) => (
-                           <SelectItem key={category} value={category}>
-                             {category}
-                           </SelectItem>
-                         ))}
-                     </SelectContent>
-                   </Select>
-                 </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={filters.category}
+                    onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All categories</SelectItem>
+                      {Object.keys(stats.reportsByCategory)
+                        .filter(category => category && category.trim() !== '')
+                        .map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -515,73 +642,137 @@ export default function AdminCheckRequestPage() {
                                     <p className="text-sm text-gray-700">{selectedReport.description}</p>
                                   </div>
 
-                                  {/* AI Insights */}
-                                  {selectedReport.aiAnalysis.riskFactors.length > 0 && (
-                                    <div>
-                                      <h3 className="font-semibold mb-2">Risk Factors</h3>
-                                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                                        {selectedReport.aiAnalysis.riskFactors.map((factor, index) => (
-                                          <li key={index}>{factor}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-
                                   {/* Verification Form */}
                                   <div className="border-t pt-4">
-                                    <h3 className="font-semibold mb-4">Verification Decision</h3>
-                                    <div className="space-y-4">
-                                      <div className="flex items-center gap-4">
-                                        <Button
-                                          variant={verificationData.isVerified ? "default" : "outline"}
-                                          onClick={() => setVerificationData(prev => ({ ...prev, isVerified: true }))}
-                                          className="flex-1"
-                                        >
-                                          <CheckCircle className="h-4 w-4 mr-2" />
-                                          Verify Report
-                                        </Button>
-                                        <Button
-                                          variant={!verificationData.isVerified ? "destructive" : "outline"}
-                                          onClick={() => setVerificationData(prev => ({ ...prev, isVerified: false }))}
-                                          className="flex-1"
-                                        >
-                                          <XCircle className="h-4 w-4 mr-2" />
-                                          Reject Report
-                                        </Button>
-                                      </div>
+                                    {!showSolReward ? (
+                                      <>
+                                        <h3 className="font-semibold mb-4">Verification Decision</h3>
+                                        <div className="space-y-4">
+                                          <div className="flex items-center gap-4">
+                                            <Button
+                                              variant={verificationData.isVerified ? "default" : "outline"}
+                                              onClick={() => setVerificationData(prev => ({ ...prev, isVerified: true }))}
+                                              className="flex-1"
+                                            >
+                                              <CheckCircle className="h-4 w-4 mr-2" />
+                                              Verify Report
+                                            </Button>
+                                            <Button
+                                              variant={!verificationData.isVerified ? "destructive" : "outline"}
+                                              onClick={() => setVerificationData(prev => ({ ...prev, isVerified: false }))}
+                                              className="flex-1"
+                                            >
+                                              <XCircle className="h-4 w-4 mr-2" />
+                                              Reject Report
+                                            </Button>
+                                          </div>
 
-                                      <div>
-                                        <Label htmlFor="notes">Notes</Label>
-                                        <Textarea
-                                          id="notes"
-                                          placeholder="Provide reasoning for your decision..."
-                                          value={verificationData.notes}
-                                          onChange={(e) => setVerificationData(prev => ({ ...prev, notes: e.target.value }))}
-                                          rows={3}
-                                        />
-                                      </div>
+                                          <div>
+                                            <Label htmlFor="notes">Notes</Label>
+                                            <Textarea
+                                              id="notes"
+                                              placeholder="Provide reasoning for your decision..."
+                                              value={verificationData.notes}
+                                              onChange={(e) => setVerificationData(prev => ({ ...prev, notes: e.target.value }))}
+                                              rows={3}
+                                            />
+                                          </div>
 
-                                      <div className="flex justify-end gap-2">
-                                        <Button
-                                          variant="outline"
-                                          onClick={() => {
-                                            setSelectedReport(null);
-                                            setVerificationData({ isVerified: false, notes: '' });
-                                          }}
-                                        >
-                                          Cancel
-                                        </Button>
-                                        <Button
-                                          onClick={handleVerification}
-                                          disabled={!verificationData.notes.trim()}
-                                        >
-                                          Submit Decision
-                                        </Button>
-                                      </div>
-                                    </div>
+                                          <div className="flex justify-end gap-2">
+                                            <Button
+                                              variant="outline"
+                                              onClick={() => {
+                                                setSelectedReport(null);
+                                                setVerificationData({ isVerified: false, notes: '' });
+                                              }}
+                                            >
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              onClick={handleVerification}
+                                              disabled={!verificationData.notes.trim()}
+                                            >
+                                              Submit Decision
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <h3 className="font-semibold mb-4 text-green-600">🎉 Report Verified Successfully!</h3>
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                          <p className="text-sm text-green-800 mb-2">
+                                            Great job! This report has been verified. Would you like to send a SOL reward to the user?
+                                          </p>
+                                          <p className="text-xs text-green-600">
+                                            Rewarding users encourages more quality reports and community engagement.
+                                          </p>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                          <div>
+                                            <Label htmlFor="reward-amount">Reward Amount (SOL)</Label>
+                                            <Select 
+                                              value={rewardAmount} 
+                                              onValueChange={setRewardAmount}
+                                            >
+                                              <SelectTrigger>
+                                                <SelectValue placeholder="Select reward amount" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="0.05">0.05 SOL (~$2)</SelectItem>
+                                                <SelectItem value="0.1">0.1 SOL (~$4)</SelectItem>
+                                                <SelectItem value="0.2">0.2 SOL (~$8)</SelectItem>
+                                                <SelectItem value="0.5">0.5 SOL (~$20)</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          <div>
+                                            <Label htmlFor="user-wallet">User's Wallet Address</Label>
+                                            {/* Read-only display of userPublicKey */}
+                                            <Input
+                                              id="user-wallet"
+                                              value={airdropPublicKey}
+                                            className="font-mono text-sm bg-gray-100 cursor-not-allowed"
+                                            />
+                                            <p className="text-xs text-gray-500 mt-1">
+                                              Automatically filled from the report submission
+                                            </p>
+                                          </div>
+
+                                          <div className="flex justify-end gap-2">
+                                            <Button
+                                              variant="outline"
+                                              onClick={skipReward}
+                                            >
+                                              Skip Reward
+                                            </Button>
+                                            <Button
+                                              onClick={() => sendRewardToUser(airdropPublicKey)}
+                                              disabled={!airdropPublicKey.trim() || !wallet.connected}
+                                              className="bg-green-600 hover:bg-green-700"
+                                            >
+                                              <Wallet className="h-4 w-4 mr-2" />
+                                              Send {rewardAmount} SOL Reward
+                                            </Button>
+                                          </div>
+
+                                          {!wallet.connected && (
+                                            <Alert>
+                                              <AlertTriangle className="h-4 w-4" />
+                                              <AlertDescription>
+                                                Please connect your wallet to send rewards.
+                                              </AlertDescription>
+                                            </Alert>
+                                          )}
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               )}
+
                             </DialogContent>
                           </Dialog>
                         </div>
@@ -596,7 +787,7 @@ export default function AdminCheckRequestPage() {
 
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Category Breakdown */}
+
             <Card>
               <CardHeader>
                 <CardTitle>Reports by Category</CardTitle>
@@ -613,7 +804,6 @@ export default function AdminCheckRequestPage() {
               </CardContent>
             </Card>
 
-            {/* Priority Breakdown */}
             <Card>
               <CardHeader>
                 <CardTitle>Reports by Priority</CardTitle>

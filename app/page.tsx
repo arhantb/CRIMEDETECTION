@@ -34,7 +34,7 @@ export default function HomePage() {
       icon: BarChart3
     },
     {
-      href: '/predictions',
+      href: 'http://11.11.2.3:3000/timeline-predictions',
       label: 'Predictions',
       icon: BarChart3
     }

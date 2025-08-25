@@ -26,21 +26,21 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
-    appearance={{
-      variables: {
-        colorPrimary: "#3371FF",
-        fontSize: "16px",
-      },
-    }}
-  >
-    <html lang="en">
-      <body className={`${dmSans.variable} antialiased`}>
-        {/* <CrimeReportNav /> */}
-        <main>
-          {children}
-        </main>
-      </body>
-    </html>
+      appearance={{
+        variables: {
+          colorPrimary: "#3371FF",
+          fontSize: "16px",
+        },
+      }}
+    >
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${dmSans.variable} antialiased`} suppressHydrationWarning>
+          {/* <CrimeReportNav /> */}
+          <main>
+            {children}
+          </main>
+        </body>
+      </html>
     </ClerkProvider>
   )
 }

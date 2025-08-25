@@ -15,6 +15,7 @@ export interface CrimeReport {
     latitude: number;
     longitude: number;
   };
+  userPublicKey: string;
 }
 
 export interface AIAnalysis {
@@ -47,7 +48,7 @@ export interface CrimeReportRequest {
   description: string;
   mediaFiles: File[];
   category: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  priority: 'low' | 'medium' | 'high' | 'critical';
   coordinates?: {
     latitude: number;
     longitude: number;
