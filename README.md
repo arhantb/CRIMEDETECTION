@@ -1,273 +1,167 @@
-# AI-Powered Crime Detection System
+# Crime Analytics Dashboard - Timeline Predictions
 
-A comprehensive crime reporting system with intelligent AI analysis and human-in-the-loop verification using LangGraph, LangChain, and Gemini API.
+A comprehensive crime analytics dashboard with advanced timeline prediction capabilities, built with Next.js, TypeScript, and Tailwind CSS.
 
-## 🚀 Features
+## Features
 
-- **AI-Powered Analysis**: Uses Google's Gemini API for intelligent image and video analysis
-- **Human-in-the-Loop**: Combines AI insights with human expertise for accurate verification
-- **LangGraph Workflow**: Orchestrates complex AI workflows with state management
-- **LangChain Integration**: Connects AI models and tools for intelligent processing
-- **Media Support**: Handles both photo and video uploads with validation
-- **Real-time Processing**: Immediate AI analysis with configurable review thresholds
-- **Admin Dashboard**: Comprehensive reporting and verification interface
-- **Responsive Design**: Modern UI built with Next.js and Tailwind CSS
+### Main Dashboard
+- **Geographical Crime Heat Maps**: Interactive maps showing crime intensity across regions
+- **Advanced Filtering**: Filter by crime types, time ranges, regions, and intensity
+- **Socio-Economic Insights**: Economic overlay controls and analysis
+- **Satellite Data Integration**: Satellite overlay controls and data analysis
+- **AI-Powered Insights**: AI hologram panels and assistant functionality
 
-## 🏗️ Architecture
+### Timeline Predictions Dashboard (NEW)
+- **CSV Data Import**: Upload places.csv files with crime data
+- **Timeline Analysis**: Analyze crime patterns over time by area and dates
+- **Predictive Intelligence**: AI-powered crime predictions for upcoming months
+- **Seasonal Pattern Recognition**: Identify peak and low crime seasons
+- **District Hotspot Analysis**: Visualize high-risk areas with interactive heat maps
+- **Trend Analysis**: Track crime trends with percentage changes and visualizations
 
-### System Components
+## CSV Data Format
 
-1. **Frontend**: Next.js 15 with TypeScript and Tailwind CSS
-2. **AI Analysis**: Gemini API for media content analysis
-3. **Workflow Engine**: LangGraph for orchestrating AI processes
-4. **Backend Services**: RESTful APIs for report management
-5. **Storage**: In-memory storage (configurable for production databases)
+The Timeline Predictions dashboard expects CSV files with the following columns:
 
-### AI Workflow
-
-```
-User Upload → Media Processing → AI Analysis → Risk Assessment → Human Review → Final Decision
-```
-
-## 🛠️ Technology Stack
-
-- **Frontend**: Next.js 15, React 18, TypeScript
-- **UI Components**: Radix UI, Tailwind CSS
-- **AI/ML**: LangGraph, LangChain, Google Gemini API
-- **Backend**: Next.js API Routes
-- **State Management**: React Hooks
-- **File Handling**: Base64 encoding for media storage
-
-## 📁 Project Structure
-
-```
-CRIMEDETECTION/
-├── app/
-│   ├── api/
-│   │   ├── report/          # Crime report submission API
-│   │   └── admin/           # Admin verification API
-│   ├── report/              # Crime reporting page (/report)
-│   ├── admin/               # Admin panel (/admin/checkrequest)
-│   ├── globals.css          # Global styles
-│   ├── layout.tsx           # Root layout
-│   └── page.tsx             # Home page
-├── components/
-│   ├── ui/                  # Reusable UI components
-│   └── crime-report-nav.tsx # Navigation component
-├── lib/
-│   ├── services/            # Business logic services
-│   │   ├── gemini-service.ts           # Gemini API integration
-│   │   ├── crime-analysis-workflow.ts  # LangGraph workflow
-│   │   └── crime-report-service.ts     # Report management
-│   └── types/               # TypeScript type definitions
-│       └── crime-report.ts  # Crime report types
-├── package.json             # Dependencies
-└── README.md               # This file
+```csv
+Latitude,Longitude,CrimeGroup_Name,Year,Month,District_Name
+28.6139,77.2090,Theft,2023,1,New Delhi
+19.0760,72.8777,Assault,2023,2,Mumbai
+12.9716,77.5946,Fraud,2023,3,Bangalore
 ```
 
-## 🚀 Getting Started
+### Required Columns:
+- **Latitude**: Geographic latitude coordinate
+- **Longitude**: Geographic longitude coordinate  
+- **CrimeGroup_Name**: Type of crime (e.g., Theft, Assault, Fraud, Cybercrime, DrugOffenses)
+- **Year**: Year of the crime incident
+- **Month**: Month of the crime incident (1-12)
+- **District_Name**: Name of the district where the crime occurred
+
+## Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ 
 - npm or pnpm
-- Google Gemini API key
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd CRIMEDETECTION
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
-
-3. **Environment Setup**
-   Create a `.env.local` file in the root directory:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   pnpm dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📱 Usage
-
-### For Users
-
-1. **Navigate to `/report`**
-2. **Upload media**: Select photos or videos (max 10MB each)
-3. **Fill details**: Location, description, category, and priority
-4. **Submit**: Report is automatically processed by AI
-5. **Track status**: Monitor report processing and verification
-
-### For Administrators
-
-1. **Navigate to `/admin/checkrequest`**
-2. **Review reports**: View all submitted reports with AI analysis
-3. **Filter and search**: Use advanced filtering options
-4. **Verify reports**: Review AI findings and provide human verification
-5. **Analytics**: View statistics and trends
-
-## 🔧 Configuration
-
-### AI Analysis Thresholds
-
-The system automatically determines when human review is required based on:
-
-- **Confidence Level**: < 70% requires review
-- **Severity Level**: High/Critical requires review
-- **Risk Factors**: > 3 risk factors requires review
-
-### Media Processing
-
-- **Supported Formats**: JPEG, PNG, GIF, MP4, AVI, MOV, WMV
-- **File Size Limit**: 10MB per file
-- **Storage**: Base64 encoding (configurable for cloud storage)
-
-## 🔒 Security Features
-
-- **Input Validation**: Comprehensive form and file validation
-- **File Type Restrictions**: Only allowed media formats
-- **Size Limits**: Prevents abuse through large file uploads
-- **Admin Authentication**: Secure admin panel access (configurable)
-
-## 🚀 Production Deployment
-
-### Database Integration
-
-Replace the in-memory storage with a production database:
-
-```typescript
-// Example: PostgreSQL integration
-import { Pool } from 'pg'
-
-class CrimeReportStorage {
-  private pool: Pool
-
-  constructor() {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-    })
-  }
-
-  async create(report: Omit<CrimeReport, 'id'>): Promise<CrimeReport> {
-    const query = `
-      INSERT INTO crime_reports (user_id, location, description, media_urls, ...)
-      VALUES ($1, $2, $3, $4, ...)
-      RETURNING *
-    `
-    // Implementation details...
-  }
-}
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd CriminalPrediction
 ```
 
-### File Storage
-
-Integrate with cloud storage services:
-
-```typescript
-// Example: AWS S3 integration
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-
-class MediaStorageService {
-  private s3Client: S3Client
-
-  async uploadFile(file: File): Promise<string> {
-    // Upload to S3 and return URL
-  }
-}
+2. Install dependencies:
+```bash
+npm install
+# or
+pnpm install
 ```
 
-### Authentication
-
-Add proper authentication middleware:
-
-```typescript
-// Example: JWT authentication
-import { verify } from 'jsonwebtoken'
-
-export function authMiddleware(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  // Verify token and extract user info
-}
+3. Run the development server:
+```bash
+npm run dev
+# or
+pnpm dev
 ```
 
-## 📊 API Endpoints
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### POST `/api/report`
-Submit a new crime report
+## Usage
 
-**Request**: FormData with media files and report details
-**Response**: Created report object
+### Main Dashboard
+1. Navigate to the main dashboard at `/`
+2. Use the advanced filter panel to customize your analysis
+3. Explore the crime heat map and socio-economic insights
+4. Utilize AI-powered features for enhanced analysis
 
-### GET `/api/report`
-Retrieve all crime reports
+### Timeline Predictions Dashboard
+1. Navigate to `/timeline-predictions`
+2. Upload your places.csv file using the file upload interface
+3. View data quality metrics and statistics
+4. Apply filters to focus on specific districts, crime types, or time periods
+5. Explore the analysis results across four main tabs:
+   - **Overview**: Summary of crime trends and next month predictions
+   - **Trends**: Detailed crime trend analysis with visualizations
+   - **Hotspots**: District hotspot analysis with risk level indicators
+   - **Predictions**: Prediction accuracy and analysis summary
 
-### POST `/api/admin/verify`
-Verify or reject a crime report
+## Dashboard Features
 
-**Request**: JSON with report ID, admin ID, verification decision, and notes
-**Response**: Updated report object
+### Data Quality Assessment
+- Total records count
+- Districts covered
+- Crime types identified
+- Data quality percentage
 
-### GET `/api/admin/verify`
-Retrieve reports with filtering options
+### Analysis Capabilities
+- **Crime Trend Analysis**: Track percentage changes and identify increasing/decreasing trends
+- **Seasonal Pattern Recognition**: Identify peak, low, and average crime seasons
+- **District Hotspot Mapping**: Visualize high-risk areas with crime intensity indicators
+- **Predictive Modeling**: AI-powered predictions for upcoming months with confidence levels
 
-**Query Parameters**: status, priority, category, search
+### Interactive Visualizations
+- **Timeline Trend Charts**: Bar charts showing crime patterns over time
+- **Seasonal Pattern Charts**: Monthly crime distribution with trend indicators
+- **District Heat Maps**: Interactive cards showing crime hotspots with risk levels
+- **Prediction Accuracy Metrics**: Historical accuracy tracking and confidence intervals
 
-## 🤝 Contributing
+## Technology Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Charts**: Custom chart components with CSS animations
+- **Authentication**: Clerk
+- **Data Processing**: Custom TypeScript services
+- **Animations**: CSS animations and transitions
+
+## Project Structure
+
+```
+CriminalPrediction/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── timeline-predictions/
+│       └── page.tsx
+├── components/
+│   ├── navigation.tsx
+│   ├── timeline-predictions-dashboard.tsx
+│   ├── timeline-trend-chart.tsx
+│   ├── timeline-heat-map.tsx
+│   ├── timeline-seasonal-chart.tsx
+│   └── ui/ (shadcn/ui components)
+├── lib/
+│   ├── services/
+│   │   ├── crime-data-service.ts
+│   │   └── timeline-data-service.ts
+│   └── types/
+│       ├── crime-data.ts
+│       └── timeline-data.ts
+└── public/
+    └── sample-places.csv
+```
+
+## Sample Data
+
+A sample CSV file (`sample-places.csv`) is included in the `public` directory for testing the Timeline Predictions dashboard. This file contains sample crime data across multiple cities and time periods.
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📝 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
-For support and questions:
+For support and questions, please open an issue in the repository or contact the development team.
 
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation
 
-## 🔮 Future Enhancements
-
-- **Real-time Notifications**: WebSocket integration for live updates
-- **Mobile App**: React Native mobile application
-- **Advanced Analytics**: Machine learning insights and predictions
-- **Integration APIs**: Connect with law enforcement systems
-- **Multi-language Support**: Internationalization support
-- **Blockchain Verification**: Immutable audit trail for reports
-
-## 📚 Additional Resources
-
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [LangChain Documentation](https://js.langchain.com/)
-- [Google Gemini API](https://ai.google.dev/gemini-api)
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Tailwind CSS](https://tailwindcss.com/)
-
----
-
-Built with ❤️ using cutting-edge AI technology for safer communities.

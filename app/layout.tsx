@@ -1,9 +1,18 @@
 import { type Metadata } from 'next'
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
 import './globals.css'
-import CrimeReportNav from '@/components/crime-report-nav'
 
 import type React from "react"
 import { DM_Sans } from "next/font/google"
+import "./globals.css"
+import Navigation from "@/components/navigation"
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -13,9 +22,10 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Crime Detection System - AI-Powered Reporting",
+  title: "Crime Analytics Dashboard - India",
   description:
-    "Advanced crime reporting system with AI analysis and human-in-the-loop verification using LangGraph, LangChain, and Gemini API",
+    "Comprehensive geographical crime heat map dashboard for India with advanced filtering and socio-economic insights",
+  generator: "v0.app",
 } 
 
 export default function RootLayout({
@@ -24,13 +34,26 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${dmSans.variable} antialiased`}>
-        <CrimeReportNav />
-        <main>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${dmSans.variable} ${dmSans.variable} antialiased`}>
+          <header className="flex justify-end items-center p-4 gap-4 h-16">
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton>
+                <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header>
+          <Navigation />
           {children}
-        </main>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

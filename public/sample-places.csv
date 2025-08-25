@@ -1,0 +1,72 @@
+Latitude,Longitude,CrimeGroup_Name,Year,Month,District_Name
+28.6139,77.2090,Theft,2023,1,New Delhi
+28.6139,77.2090,Assault,2023,1,New Delhi
+28.6139,77.2090,Fraud,2023,2,New Delhi
+19.0760,72.8777,Theft,2023,2,Mumbai
+19.0760,72.8777,Cybercrime,2023,3,Mumbai
+19.0760,72.8777,Assault,2023,3,Mumbai
+12.9716,77.5946,Theft,2023,3,Bangalore
+12.9716,77.5946,DrugOffenses,2023,4,Bangalore
+12.9716,77.5946,Fraud,2023,4,Bangalore
+13.0827,80.2707,Theft,2023,4,Chennai
+13.0827,80.2707,Assault,2023,5,Chennai
+13.0827,80.2707,Cybercrime,2023,5,Chennai
+17.3850,78.4867,Theft,2023,5,Hyderabad
+17.3850,78.4867,Fraud,2023,6,Hyderabad
+17.3850,78.4867,DrugOffenses,2023,6,Hyderabad
+22.5726,88.3639,Theft,2023,6,Kolkata
+22.5726,88.3639,Assault,2023,7,Kolkata
+22.5726,88.3639,Cybercrime,2023,7,Kolkata
+26.8467,80.9462,Theft,2023,7,Lucknow
+26.8467,80.9462,Fraud,2023,8,Lucknow
+26.8467,80.9462,DrugOffenses,2023,8,Lucknow
+23.0225,72.5714,Theft,2023,8,Ahmedabad
+23.0225,72.5714,Assault,2023,9,Ahmedabad
+23.0225,72.5714,Cybercrime,2023,9,Ahmedabad
+25.2048,55.2708,Theft,2023,9,Dubai
+25.2048,55.2708,Fraud,2023,10,Dubai
+25.2048,55.2708,DrugOffenses,2023,10,Dubai
+28.6139,77.2090,Theft,2023,10,New Delhi
+28.6139,77.2090,Assault,2023,11,New Delhi
+28.6139,77.2090,Cybercrime,2023,11,New Delhi
+19.0760,72.8777,Theft,2023,11,Mumbai
+19.0760,72.8777,Fraud,2023,12,Mumbai
+19.0760,72.8777,DrugOffenses,2023,12,Mumbai
+12.9716,77.5946,Theft,2023,12,Bangalore
+12.9716,77.5946,Assault,2024,1,Bangalore
+12.9716,77.5946,Cybercrime,2024,1,Bangalore
+13.0827,80.2707,Theft,2024,1,Chennai
+13.0827,80.2707,Fraud,2024,2,Chennai
+13.0827,80.2707,DrugOffenses,2024,2,Chennai
+17.3850,78.4867,Theft,2024,2,Hyderabad
+17.3850,78.4867,Assault,2024,3,Hyderabad
+17.3850,78.4867,Cybercrime,2024,3,Hyderabad
+22.5726,88.3639,Theft,2024,3,Kolkata
+22.5726,88.3639,Fraud,2024,4,Kolkata
+22.5726,88.3639,DrugOffenses,2024,4,Kolkata
+26.8467,80.9462,Theft,2024,4,Lucknow
+26.8467,80.9462,Assault,2024,5,Lucknow
+26.8467,80.9462,Cybercrime,2024,5,Lucknow
+23.0225,72.5714,Theft,2024,5,Ahmedabad
+23.0225,72.5714,Fraud,2024,6,Ahmedabad
+23.0225,72.5714,DrugOffenses,2024,6,Ahmedabad
+25.2048,55.2708,Theft,2024,6,Dubai
+25.2048,55.2708,Assault,2024,7,Dubai
+25.2048,55.2708,Cybercrime,2024,7,Dubai
+28.6139,77.2090,Theft,2024,7,New Delhi
+28.6139,77.2090,Fraud,2024,8,New Delhi
+28.6139,77.2090,DrugOffenses,2024,8,New Delhi
+19.0760,72.8777,Theft,2024,8,Mumbai
+19.0760,72.8777,Assault,2024,9,Mumbai
+19.0760,72.8777,Cybercrime,2024,9,Mumbai
+12.9716,77.5946,Theft,2024,9,Bangalore
+12.9716,77.5946,Fraud,2024,10,Bangalore
+12.9716,77.5946,DrugOffenses,2024,10,Bangalore
+13.0827,80.2707,Theft,2024,10,Chennai
+13.0827,80.2707,Assault,2024,11,Chennai
+13.0827,80.2707,Cybercrime,2024,11,Chennai
+17.3850,78.4867,Theft,2024,11,Hyderabad
+17.3850,78.4867,Fraud,2024,12,Hyderabad
+17.3850,78.4867,DrugOffenses,2024,12,Hyderabad
+
+
