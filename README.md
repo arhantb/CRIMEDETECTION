@@ -271,3 +271,4 @@ For support and questions:
 ---
 
 Built with ❤️ using cutting-edge AI technology for safer communities.
+updated readme
